@@ -35,6 +35,7 @@ public sealed class Game
     {
         string? guess = null;
 
+        Console.WriteLine();
         Console.Write($"Enter guess {_attempt}: ");
 
         while (string.IsNullOrEmpty(guess))
@@ -44,6 +45,7 @@ public sealed class Game
             if (!Words.IsValid(input))
             {
                 Console.WriteLine("Not in word list!");
+                Console.WriteLine();
                 Console.Write("Enter guess: ");
                 continue;
             }
@@ -57,34 +59,63 @@ public sealed class Game
     private void PrintGuessResult(string guess)
     {
         Console.WriteLine();
+        Console.Write("\t");
 
         if (guess.Equals(Words.KonamiCode, StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine(_word);
+            Console.Write(_word);
         }
         else
         {
+            var letters = BuildLetterDictionary(_word);
+
             for (var i = 0; i < guess.Length; i++)
             {
-                Console.ForegroundColor = guess[i] switch
-                {
-                    char c when c == _word[i] => ConsoleColor.DarkGreen,
-                    char c when _word.Contains(c) => ConsoleColor.DarkYellow,
-                    _ => ConsoleColor.DarkGray
-                };
+                char c = guess[i];
 
-                Console.Write(Char.ToUpper(guess[i]));
+                if (c == _word[i])
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    letters[c]--;
+                }
+                else if (letters.ContainsKey(c) && letters[c] > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    letters[c]--;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                }
+
+                Console.Write(char.ToUpper(c));
             }
+
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
-        Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine();
+    }
+
+    private static IDictionary<char, int> BuildLetterDictionary(string word)
+    {
+        var dictionary = new Dictionary<char, int>();
+
+        foreach (char c in word)
+        {
+            if (!dictionary.ContainsKey(c))
+            {
+                dictionary.Add(c, 0);
+            }
+
+            dictionary[c]++;
+        }
+
+        return dictionary;
     }
 
     private bool CheckForWin(string guess)
     {
-        Console.WriteLine();
-
         if (guess.Equals(_word, StringComparison.OrdinalIgnoreCase))
         {
             var result = RemainingAttempts switch
@@ -96,16 +127,18 @@ public sealed class Game
                 4 => "Magnificent!",
                 _ => "Genius!",
             };
-            Console.ForegroundColor = ConsoleColor.DarkBlue;
-            Console.WriteLine(result);
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine();
+            Console.WriteLine("\t" + result);
             Console.ForegroundColor = ConsoleColor.White;
             return true;
         }
 
         if (RemainingAttempts < 1)
         {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine(_word.ToUpperInvariant());
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine();
+            Console.WriteLine("\t" + _word.ToUpperInvariant());
             Console.ForegroundColor = ConsoleColor.White;
             return true;
         }
